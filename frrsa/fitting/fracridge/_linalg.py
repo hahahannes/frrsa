@@ -1,19 +1,29 @@
+
 """
 This code is taken from the hyperlearn library: https://github.com/danielhanchen/hyperlearn/
+
 And distributed together with the license therein:
+
+
 BSD 3-Clause License
+
 Copyright (c) 2020, Daniel Han-Chen
 All rights reserved.
+
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
+
 1. Redistributions of source code must retain the above copyright notice, this
    list of conditions and the following disclaimer.
+
 2. Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
    and/or other materials provided with the distribution.
+
 3. Neither the name of the copyright holder nor the names of its
    contributors may be used to endorse or promote products derived from
    this software without specific prior written permission.
+
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -29,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from . import _numba as numba
 from ._numba import njit, USE_NUMBA, sign, arange
 import numpy as np
+from scipy.linalg import lapack as get_lapack_funcs
 
 
 def svd_flip(U, VT, U_decision=True):
@@ -58,6 +69,7 @@ def svd(X, fast=True, U_decision=False, transpose=True):
     So, X = U * S @ VT. Note will compute svd(X.T) if p > n.
     Should be 99% same result. This means this implementation's
     time complexity is O[ min(np^2, n^2p) ]
+
     Speed
     --------------
     If USE_GPU:
@@ -70,6 +82,7 @@ def svd(X, fast=True, U_decision=False, transpose=True):
     If Transpose:
         Will compute if possible svd(X.T) instead of svd(X) if p > n.
         Default setting is TRUE to maintain speed.
+
     Stability
     --------------
     SVD_Flip is used for deterministic output. Does NOT follow Sklearn convention.
@@ -87,12 +100,14 @@ def svd(X, fast=True, U_decision=False, transpose=True):
             U, S, VT = numba.svd(X)
         else:
             #### TO DO: If memory usage exceeds LWORK, use GESVD
-            U, S, VT, __ = lapack("gesdd", fast)(X, full_matrices=False)
+            U, S, VT, __ = get_lapack_funcs("gesdd")(X, full_matrices=False)
     else:
-        U, S, VT = lapack("gesvd", fast)(X, full_matrices=False)
+        U, S, VT, __ = get_lapack_funcs("gesvd")(X, full_matrices=False)
 
     U, VT = svd_flip(U, VT, U_decision=U_decision)
 
     if transpose:
         return VT.T, S, U.T
     return U, S, VT
+
+
